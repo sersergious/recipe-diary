@@ -162,7 +162,6 @@ fun RecipeDetailRow(icon: ImageVector, label: String, value: String) {
 }
 
 
-
 @Composable
 fun RecipeDetailSection(icon: ImageVector, label: String, items: List<String>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

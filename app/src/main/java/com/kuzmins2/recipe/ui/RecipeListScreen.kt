@@ -59,6 +59,7 @@ fun RecipeListScreen(
         }
     }
 }
+
 @Composable
 fun RecipeItem(recipe: Recipe, onClick: () -> Unit) {
     Card(

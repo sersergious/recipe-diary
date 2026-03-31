@@ -62,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import com.kuzmins2.recipe.viewmodel.RecipeViewModel
 
 
-
 // For managing the UI State of the AddRecipeScreen
 // and monitoring all the input, I need a data class.
 // This removes some of the redundancy and minimizes
@@ -169,13 +168,16 @@ fun AddRecipeForm(
     onSave: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
         shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             RecipeNameField(
@@ -200,10 +202,12 @@ fun AddRecipeForm(
                 onInputChange = { onStateChange(state.copy(ingredientInput = it)) },
                 onAddItem = {
                     if (state.ingredientInput.isNotBlank()) {
-                        onStateChange(state.copy(
-                            ingredients = state.ingredients + state.ingredientInput.trim(),
-                            ingredientInput = ""
-                        ))
+                        onStateChange(
+                            state.copy(
+                                ingredients = state.ingredients + state.ingredientInput.trim(),
+                                ingredientInput = ""
+                            )
+                        )
                     }
                 },
                 onRemoveItem = { onStateChange(state.copy(ingredients = state.ingredients - it)) }
@@ -217,10 +221,12 @@ fun AddRecipeForm(
                 onInputChange = { onStateChange(state.copy(instructionInput = it)) },
                 onAddItem = {
                     if (state.instructionInput.isNotBlank()) {
-                        onStateChange(state.copy(
-                            instructions = state.instructions + state.instructionInput.trim(),
-                            instructionInput = ""
-                        ))
+                        onStateChange(
+                            state.copy(
+                                instructions = state.instructions + state.instructionInput.trim(),
+                                instructionInput = ""
+                            )
+                        )
                     }
                 },
                 onRemoveItem = { onStateChange(state.copy(instructions = state.instructions - it)) }

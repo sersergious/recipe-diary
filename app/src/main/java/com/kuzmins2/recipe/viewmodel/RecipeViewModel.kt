@@ -11,9 +11,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-import kotlin.collections.find
-import kotlin.text.equals
-
 class RecipeViewModel : ViewModel() {
 
     private val _recipes = MutableStateFlow<List<Recipe>>(emptyList())
@@ -23,16 +20,23 @@ class RecipeViewModel : ViewModel() {
     val saveEvent: SharedFlow<Unit> = _saveEvent.asSharedFlow()
     private val recipeRepo = RecipeRepository()
 
-    fun addRecipe(name: String, category: String, ingredients: List<String>, instructions: List<String>) {
-        recipeRepo.addRecipe( Recipe(
-            id = System.currentTimeMillis().toInt(),
-            name = name,
-            category = category,
-            ingredients = ingredients,
-            instructions = instructions
-        ))
-        _recipes.value = recipeRepo.getAllRecipes()
-        viewModelScope.launch { _saveEvent.emit(Unit)}
+    fun addRecipe(
+        name: String,
+        category: String,
+        ingredients: List<String>,
+        instructions: List<String>
+    ) {
+        recipeRepo.addRecipe(
+            Recipe(
+                id = System.currentTimeMillis().toInt(),
+                name = name,
+                category = category,
+                ingredients = ingredients,
+                instructions = instructions
+            )
+        )
+        _recipes.value = getAllRecipes()
+        viewModelScope.launch { _saveEvent.emit(Unit) }
     }
 
     fun getAllRecipes(): List<Recipe> {

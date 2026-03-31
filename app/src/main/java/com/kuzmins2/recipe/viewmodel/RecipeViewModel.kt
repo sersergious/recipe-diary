@@ -1,9 +1,8 @@
-package com.kuzmins2.recipes.viewmodel
+package com.kuzmins2.recipe.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kuzmins2.recipes.model.Recipe
+import com.kuzmins2.recipe.model.Recipe
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

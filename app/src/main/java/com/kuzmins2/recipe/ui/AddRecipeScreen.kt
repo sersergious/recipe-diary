@@ -1,4 +1,4 @@
-package com.kuzmins2.recipes.ui
+package com.kuzmins2.recipe.ui
 
 
 import androidx.compose.foundation.background
@@ -59,7 +59,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
-import com.kuzmins2.recipes.viewmodel.RecipeViewModel
+import com.kuzmins2.recipe.viewmodel.RecipeViewModel
 
 
 

@@ -1,4 +1,4 @@
-package com.kuzmins2.recipes.model
+package com.kuzmins2.recipe.model
 
 data class Recipe(
     val id: Int,

@@ -1,4 +1,4 @@
-package com.kuzmins2.recipes
+package com.kuzmins2.recipe
 
 import org.junit.Test
 

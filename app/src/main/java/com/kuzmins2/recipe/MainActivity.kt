@@ -1,4 +1,4 @@
-package com.kuzmins2.recipes
+package com.kuzmins2.recipe
 
 
 import android.os.Bundle
@@ -13,15 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.kuzmins2.recipes.navigation.NavGraph
-import com.kuzmins2.recipes.navigation.Screen
-import com.kuzmins2.recipes.ui.theme.RecipesTheme
-import com.kuzmins2.recipes.viewmodel.RecipeViewModel
+import com.kuzmins2.recipe.navigation.NavGraph
+import com.kuzmins2.recipe.navigation.Screen
+import com.kuzmins2.recipe.ui.theme.RecipesTheme
+import com.kuzmins2.recipe.viewmodel.RecipeViewModel
 
 
 class MainActivity : ComponentActivity() {

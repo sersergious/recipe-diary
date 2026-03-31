@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kuzmins2.recipes"
+    namespace = "com.kuzmins2.recipe"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.kuzmins2.recipes"
+        applicationId = "com.kuzmins2.recipe"
         minSdk = 28
         targetSdk = 36
         versionCode = 1

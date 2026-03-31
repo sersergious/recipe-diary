@@ -1,4 +1,4 @@
-package com.kuzmins2.recipes.ui
+package com.kuzmins2.recipe.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,8 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kuzmins2.recipes.model.Recipe
-import com.kuzmins2.recipes.viewmodel.RecipeViewModel
+import com.kuzmins2.recipe.model.Recipe
+import com.kuzmins2.recipe.viewmodel.RecipeViewModel
 
 @Composable
 fun RecipeDetailScreen(

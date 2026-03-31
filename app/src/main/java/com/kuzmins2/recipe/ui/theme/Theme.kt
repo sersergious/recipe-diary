@@ -1,4 +1,4 @@
-package com.kuzmins2.recipes.ui.theme
+package com.kuzmins2.recipe.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

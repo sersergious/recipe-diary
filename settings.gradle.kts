@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Cooking Recipes"
+rootProject.name = "Recipes"
 include(":app")
  

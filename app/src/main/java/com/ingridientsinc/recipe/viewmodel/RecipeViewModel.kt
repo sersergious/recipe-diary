@@ -1,27 +1,92 @@
 package com.ingridientsinc.recipe.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ingridientsinc.recipe.model.Recipe
+import com.ingridientsinc.recipe.RecipeApplication
+import com.ingridientsinc.recipe.data.CategoryWithRecipe
+import com.ingridientsinc.recipe.data.entities.Category
+import com.ingridientsinc.recipe.data.entities.Ingredient
+import com.ingridientsinc.recipe.data.entities.Instruction
+import com.ingridientsinc.recipe.data.entities.Recipe
+import com.ingridientsinc.recipe.repository.IngredientInput
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-class RecipeViewModel : ViewModel() {
+data class RecipeFull(
+    val recipe: Recipe,
+    val category: Category?,
+    val ingredients: List<Ingredient>,
+    val instructions: List<Instruction>
+)
 
-    private val _recipes = MutableStateFlow<List<Recipe>>(emptyList())
-    val recipes: StateFlow<List<Recipe>> = _recipes.asStateFlow()
+sealed class UiEvent {
+    data object RecipeSaved : UiEvent()
+    data class Error(val message: String) : UiEvent()
+}
 
-    private val _saveEvent = MutableSharedFlow<Unit>()
-    val saveEvent: SharedFlow<Unit> = _saveEvent.asSharedFlow()
-    private val recipeRepo = RecipeRepository()
+@OptIn(ExperimentalCoroutinesApi::class)
+class RecipeViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val repository = (application as RecipeApplication).recipeRepository
+
+    // Single source of truth for list screen
+    val categoriesWithRecipes: StateFlow<List<CategoryWithRecipe>> =
+        repository.getAllCategoriesWithRecipes()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Derived from SSOT — no extra stateIn; UI supplies initial value when collecting
+    val categories: Flow<List<Category>> = categoriesWithRecipes
+        .map { list -> list.map { it.category } }
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent: SharedFlow<UiEvent> = _uiEvent.asSharedFlow()
+
+    // Detail screen — all related state consolidated into one StateFlow
+    private val _selectedRecipeId = MutableStateFlow<Int?>(null)
+
+    val selectedRecipeFull: StateFlow<RecipeFull?> = _selectedRecipeId
+        .flatMapLatest { id ->
+            if (id == null) return@flatMapLatest flowOf(null)
+            combine(
+                repository.getRecipeById(id),
+                repository.getIngredientsByRecipe(id),
+                repository.getInstructionsByRecipe(id)
+            ) { recipe, ingredients, instructions ->
+                Triple(recipe, ingredients, instructions)
+            }.flatMapLatest { (recipe, ingredients, instructions) ->
+                if (recipe == null) return@flatMapLatest flowOf(null)
+                repository.getCategoryById(recipe.categoryId)
+                    .map { category ->
+                        RecipeFull(
+                            recipe = recipe,
+                            category = category,
+                            ingredients = ingredients,
+                            instructions = instructions
+                        )
+                    }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun loadRecipe(id: Int) {
+        _selectedRecipeId.value = id
+    }
 
     //<LK>: What I added to this file
     private val _favoriteIds =  MutableStateFlow<Set<Int>>(emptySet())
@@ -39,55 +104,17 @@ class RecipeViewModel : ViewModel() {
     //<LK>: End of what I added to this file
     fun addRecipe(
         name: String,
-        category: String,
-        ingredients: List<String>,
+        categoryId: Int,
+        ingredients: List<IngredientInput>,
         instructions: List<String>
     ) {
-        recipeRepo.addRecipe(
-            Recipe(
-                id = System.currentTimeMillis().toInt(),
-                name = name,
-                category = category,
-                ingredients = ingredients,
-                instructions = instructions
-            )
-        )
-        _recipes.value = getAllRecipes()
-        viewModelScope.launch { _saveEvent.emit(Unit) }
-    }
-
-    fun getAllRecipes(): List<Recipe> {
-        return recipeRepo.getAllRecipes()
-    }
-
-    fun getRecipeById(id: Int): Recipe? {
-        return recipeRepo.getRecipeById(id)
-    }
-
-    fun getRecipesByCategory(category: String): List<Recipe> {
-        return recipeRepo.getRecipesByCategory(category)
+        viewModelScope.launch {
+            try {
+                repository.insertFullRecipe(name, categoryId, ingredients, instructions)
+                _uiEvent.emit(UiEvent.RecipeSaved)
+            } catch (e: Exception) {
+                _uiEvent.emit(UiEvent.Error(e.message ?: "Failed to save recipe"))
+            }
+        }
     }
 }
-
-class RecipeRepository {
-    // Private immutable list
-    private var recipes: List<Recipe> = emptyList()
-    fun addRecipe(recipe: Recipe) {
-        recipes = recipes + recipe
-    }
-
-    fun getAllRecipes(): List<Recipe> {
-        return recipes
-    }
-
-    fun getRecipeById(id: Int): Recipe? {
-        return recipes.find { it.id == id }
-    }
-
-    fun getRecipesByCategory(category: String): List<Recipe> {
-        return recipes
-            .filter { it.category.equals(category, ignoreCase = true) }
-            .sortedBy { it.name }
-    }
-}
-

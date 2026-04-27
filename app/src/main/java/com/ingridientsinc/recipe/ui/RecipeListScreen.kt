@@ -17,44 +17,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ingridientsinc.recipe.model.Recipe
+import com.ingridientsinc.recipe.data.entities.Recipe
 import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
-
 
 @Composable
 fun RecipeListScreen(
     viewModel: RecipeViewModel,
     onRecipeClick: (Int) -> Unit
 ) {
-    val recipes by viewModel.recipes.collectAsStateWithLifecycle()
-
-    val categoryOrder = listOf("Breakfast", "Lunch", "Dinner", "Dessert")
-
-    val grouped = recipes
-        .sortedBy { it.name }
-        .groupBy { it.category }
-        .toSortedMap(compareBy { categoryOrder.indexOf(it) })
+    val categoriesWithRecipes by viewModel.categoriesWithRecipes.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 30.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        grouped.forEach { (category, recipesInCategory) ->
-            item {
-                Text(
-                    text = category,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            items(recipesInCategory) { recipe ->
-                RecipeItem(
-                    recipe = recipe,
-                    onClick = { onRecipeClick(recipe.id) }
-                )
+        categoriesWithRecipes.forEach { cwr ->
+            if (cwr.recipes.isNotEmpty()) {
+                item {
+                    Text(
+                        text = cwr.category.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+                items(cwr.recipes.sortedBy { it.name }) { recipe ->
+                    RecipeItem(
+                        recipe = recipe,
+                        onClick = { onRecipeClick(recipe.recipeId) }
+                    )
+                }
             }
         }
     }
@@ -73,10 +67,6 @@ fun RecipeItem(recipe: Recipe, onClick: () -> Unit) {
             Text(
                 text = recipe.name,
                 style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = recipe.category,
-                style = MaterialTheme.typography.bodySmall
             )
         }
     }

@@ -5,19 +5,20 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-import com.ingridientsinc.recipe.data.Ingredients
+import com.ingridientsinc.recipe.data.entities.Ingredient
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface IngredientDao {
     @Query("SELECT * FROM ingredients WHERE recipe_id = :recipeId")
-    fun getIngredientsByRecipe(recipeId: Int): List<Ingredients>
+    fun getIngredientsByRecipe(recipeId: Int): Flow<List<Ingredient>>
 
     @Insert
-    fun insertIngredient(ingredient: Ingredients)
+    suspend fun insertIngredient(ingredient: Ingredient)
 
     @Update
-    fun updateIngredient(ingredient: Ingredients)
+    suspend fun updateIngredient(ingredient: Ingredient)
 
     @Delete
-    fun deleteIngredient(ingredient: Ingredients)
+    suspend fun deleteIngredient(ingredient: Ingredient)
 }

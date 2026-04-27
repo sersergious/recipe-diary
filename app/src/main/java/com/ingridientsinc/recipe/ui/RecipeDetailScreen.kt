@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Category
-
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,17 +27,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ingridientsinc.recipe.model.Recipe
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ingridientsinc.recipe.data.entities.Ingredient
+import com.ingridientsinc.recipe.viewmodel.RecipeFull
 import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
 
 @Composable
@@ -46,7 +48,9 @@ fun RecipeDetailScreen(
     recipeId: Int,
     viewModel: RecipeViewModel
 ) {
-    val recipe = viewModel.getRecipeById(recipeId)
+    LaunchedEffect(recipeId) { viewModel.loadRecipe(recipeId) }
+
+    val recipeFull by viewModel.selectedRecipeFull.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -54,7 +58,7 @@ fun RecipeDetailScreen(
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
-        recipe?.let {
+        recipeFull?.let {
             Column(
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
@@ -63,8 +67,8 @@ fun RecipeDetailScreen(
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                RecipeHeroBanner(name = it.name)
-                RecipeDetailCard(recipe = it)
+                RecipeHeroBanner(name = it.recipe.name)
+                RecipeDetailCard(recipeFull = it)
             }
         } ?: Text(
             text = "Recipe not found",
@@ -108,9 +112,8 @@ fun RecipeHeroBanner(name: String) {
     }
 }
 
-
 @Composable
-fun RecipeDetailCard(recipe: Recipe) {
+fun RecipeDetailCard(recipeFull: RecipeFull) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
@@ -124,22 +127,28 @@ fun RecipeDetailCard(recipe: Recipe) {
             RecipeDetailRow(
                 icon = Icons.Default.Category,
                 label = "Category",
-                value = recipe.category
+                value = recipeFull.category?.name ?: ""
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             RecipeDetailSection(
                 icon = Icons.AutoMirrored.Filled.List,
                 label = "Ingredients",
-                items = recipe.ingredients
+                items = recipeFull.ingredients.map { it.formatDisplay() }
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             RecipeDetailSection(
                 icon = Icons.AutoMirrored.Filled.MenuBook,
                 label = "Instructions",
-                items = recipe.instructions
+                items = recipeFull.instructions.map { it.description }
             )
         }
     }
+}
+
+private fun Ingredient.formatDisplay(): String {
+    val qty = if (quantity == quantity.toLong().toFloat()) quantity.toLong().toString()
+              else "%.2f".format(quantity).trimEnd('0').trimEnd('.')
+    return "$qty $unit $name"
 }
 
 @Composable
@@ -160,7 +169,6 @@ fun RecipeDetailRow(icon: ImageVector, label: String, value: String) {
         }
     }
 }
-
 
 @Composable
 fun RecipeDetailSection(icon: ImageVector, label: String, items: List<String>) {
@@ -186,14 +194,10 @@ fun RecipeDetailIcon(icon: ImageVector) {
         tint = MaterialTheme.colorScheme.primary,
         modifier = Modifier
             .size(40.dp)
-            .background(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = CircleShape
-            )
+            .background(color = MaterialTheme.colorScheme.primaryContainer, shape = CircleShape)
             .padding(8.dp)
     )
 }
-
 
 @Composable
 fun RecipeDetailLabel(label: String) {

@@ -5,19 +5,20 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-import com.ingridientsinc.recipe.data.Instructions
+import com.ingridientsinc.recipe.data.entities.Instruction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InstructionDao {
     @Query("SELECT * FROM instructions WHERE recipe_id = :recipeId ORDER BY step_number ASC")
-    fun getInstructionsByRecipe(recipeId: Int): List<Instructions>
+    fun getInstructionsByRecipe(recipeId: Int): Flow<List<Instruction>>
 
     @Insert
-    fun insertInstruction(instruction: Instructions)
+    suspend fun insertInstruction(instruction: Instruction)
 
     @Update
-    fun updateInstruction(instruction: Instructions)
+    suspend fun updateInstruction(instruction: Instruction)
 
     @Delete
-    fun deleteInstruction(instruction: Instructions)
+    suspend fun deleteInstruction(instruction: Instruction)
 }

@@ -4,26 +4,38 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
-import com.ingridientsinc.recipe.data.Recipes
+import com.ingridientsinc.recipe.data.RecipeWithIngredients
+import com.ingridientsinc.recipe.data.RecipeWithInstructions
+import com.ingridientsinc.recipe.data.entities.Recipe
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RecipeDao {
     @Query("SELECT * FROM recipe")
-    fun getAllRecipes(): List<Recipes>
+    fun getAllRecipes(): Flow<List<Recipe>>
 
-    @Query("SELECT * FROM recipe WHERE id = :id")
-    fun getRecipeById(id: Int): Recipes
+    @Query("SELECT * FROM recipe WHERE recipe_id = :recipeId")
+    fun getRecipeById(recipeId: Int): Flow<Recipe?>
+
+    @Transaction
+    @Query("SELECT * FROM recipe WHERE recipe_id = :recipeId")
+    fun getRecipeWithIngredients(recipeId: Int): Flow<RecipeWithIngredients>
+
+    @Transaction
+    @Query("SELECT * FROM recipe WHERE recipe_id = :recipeId")
+    fun getRecipeWithInstructions(recipeId: Int): Flow<RecipeWithInstructions>
 
     @Query("SELECT * FROM recipe WHERE category_id = :categoryId")
-    fun getRecipesByCategory(categoryId: Int): List<Recipes>
+    fun getRecipesByCategory(categoryId: Int): Flow<List<Recipe>>
 
     @Insert
-    fun insertRecipe(recipes: Recipes)
+    suspend fun insertRecipe(recipe: Recipe): Long
 
     @Update
-    fun updateRecipe(recipes: Recipes)
+    suspend fun updateRecipe(recipe: Recipe)
 
     @Delete
-    fun deleteRecipe(recipes: Recipes)
+    suspend fun deleteRecipe(recipe: Recipe)
 }

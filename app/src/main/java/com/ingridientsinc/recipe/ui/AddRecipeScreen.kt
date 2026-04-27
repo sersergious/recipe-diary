@@ -61,6 +61,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ingridientsinc.recipe.viewmodel.CreateRecipeViewModel
 
 // For managing the UI State of the AddRecipeScreen
 // and monitoring all the input, I need a data class.
@@ -78,22 +80,15 @@ data class AddRecipeState(
     val showDialog: Boolean = false
 )
 
+//<LK>: The following replaces AddRecipeScreen and AddRecipeForm
+// so that these functions can be done by the 3 step composables
+// since Dr. Bi asks for the 3-step nested graph
 @Composable
-fun AddRecipeScreen(viewModel: RecipeViewModel) {
-    var state by remember { mutableStateOf(AddRecipeState()) }
-    val isFormValid = state.recipeName.isNotBlank()
-            && state.ingredients.isNotEmpty()
-            && state.instructions.isNotEmpty()
-
-    LaunchedEffect(Unit) {
-        viewModel.saveEvent.collect {
-            state = AddRecipeState(showDialog = true)
-        }
-    }
-
-    if (state.showDialog) {
-        SavedRecipeDialog(onDismiss = { state = state.copy(showDialog = false) })
-    }
+fun CreateDetailsScreen(
+    createVm: CreateRecipeViewModel,
+    onNext: () -> Unit
+) {
+    val state by createVm.state.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -110,18 +105,170 @@ fun AddRecipeScreen(viewModel: RecipeViewModel) {
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             AddRecipeHeader()
-            AddRecipeForm(
-                state = state,
-                isFormValid = isFormValid,
-                onStateChange = { state = it },
-                onSave = {
-                    state = state.copy(submitted = true)
-                    if (isFormValid) viewModel.addRecipe(
-                        state.recipeName,
-                        state.selectedCategory,
-                        state.ingredients,
-                        state.instructions
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text("Step 1 of 3: Recipe Details",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary)
+                    RecipeNameField(
+                        value = state.recipeName,
+                        onValueChange = { v ->
+                            createVm.update { it.copy(recipeName = v) }
+                        },
+                        isError = state.submitted && state.recipeName.isBlank()
                     )
+                    CategoryDropdown(
+                        selectedCategory = state.selectedCategory,
+                        expanded = state.expanded,
+                        onExpandedChange = { v ->
+                            createVm.update { it.copy(expanded = v) }
+                        },
+                        onCategorySelected = { v ->
+                            createVm.update {
+                                it.copy(selectedCategory = v, expanded = false)
+                            }
+                        }
+                    )
+                    Button(
+                        onClick = {
+                            createVm.markSubmitted()
+                            if (state.recipeName.isNotBlank()) onNext()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Text("Next: Ingredients", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CreateIngredientsScreen(
+    createVm: CreateRecipeViewModel,
+    onNext: () -> Unit
+) {
+    val state by createVm.state.collectAsStateWithLifecycle()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .align(Alignment.Center)
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 16.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("Step 2 of 3: Ingredients",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary)
+            StringListInput(
+                label = "Ingredients",
+                input = state.ingredientInput,
+                items = state.ingredients,
+                isError = state.submitted && state.ingredients.isEmpty(),
+                onInputChange = { v ->
+                    createVm.update { it.copy(ingredientInput = v) }
+                },
+                onAddItem = { createVm.addIngredient() },
+                onRemoveItem = { createVm.removeIngredient(it) }
+            )
+            Button(
+                onClick = {
+                    createVm.markSubmitted()
+                    if (state.ingredients.isNotEmpty()) onNext()
+                },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+            ) {
+                Text("Next: Instructions", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun CreateStepsScreen(
+    createVm: CreateRecipeViewModel,
+    recipeVm: RecipeViewModel,
+    onSaved: () -> Unit
+) {
+    val state by createVm.state.collectAsStateWithLifecycle()
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        SavedRecipeDialog(onDismiss = {
+            showDialog = false
+            onSaved()
+        })
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .align(Alignment.Center)
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 16.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("Step 3 of 3: Instructions",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary)
+            StringListInput(
+                label = "Instructions",
+                input = state.instructionInput,
+                items = state.instructions,
+                isError = state.submitted && state.instructions.isEmpty(),
+                onInputChange = { v ->
+                    createVm.update { it.copy(instructionInput = v) }
+                },
+                onAddItem = { createVm.addInstruction() },
+                onRemoveItem = { createVm.removeInstruction(it) }
+            )
+            SaveRecipeButton(
+                enabled = createVm.isValid(),
+                onClick = {
+                    createVm.markSubmitted()
+                    if (createVm.isValid()) {
+                        // <LK>: Activity-scoped recipeVm commits the save.
+                        // Graph-scoped createVm dies when CreateGraph pops.
+                        recipeVm.addRecipe(
+                            state.recipeName,
+                            state.selectedCategory,
+                            state.ingredients,
+                            state.instructions
+                        )
+                        showDialog = true
+                    }
                 }
             )
         }
@@ -157,83 +304,6 @@ fun AddRecipeHeader() {
             color = MaterialTheme.colorScheme.onPrimary,
             fontWeight = FontWeight.Bold
         )
-    }
-}
-
-@Composable
-fun AddRecipeForm(
-    state: AddRecipeState,
-    isFormValid: Boolean,
-    onStateChange: (AddRecipeState) -> Unit,
-    onSave: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
-        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            RecipeNameField(
-                value = state.recipeName,
-                onValueChange = { onStateChange(state.copy(recipeName = it)) },
-                isError = state.submitted && state.recipeName.isBlank()
-            )
-            CategoryDropdown(
-                selectedCategory = state.selectedCategory,
-                expanded = state.expanded,
-                onExpandedChange = { onStateChange(state.copy(expanded = it)) },
-                onCategorySelected = {
-                    onStateChange(state.copy(selectedCategory = it, expanded = false))
-                }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            StringListInput(
-                label = "Ingredients",
-                input = state.ingredientInput,
-                items = state.ingredients,
-                isError = state.submitted && state.ingredients.isEmpty(),
-                onInputChange = { onStateChange(state.copy(ingredientInput = it)) },
-                onAddItem = {
-                    if (state.ingredientInput.isNotBlank()) {
-                        onStateChange(
-                            state.copy(
-                                ingredients = state.ingredients + state.ingredientInput.trim(),
-                                ingredientInput = ""
-                            )
-                        )
-                    }
-                },
-                onRemoveItem = { onStateChange(state.copy(ingredients = state.ingredients - it)) }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            StringListInput(
-                label = "Instructions",
-                input = state.instructionInput,
-                items = state.instructions,
-                isError = state.submitted && state.instructions.isEmpty(),
-                onInputChange = { onStateChange(state.copy(instructionInput = it)) },
-                onAddItem = {
-                    if (state.instructionInput.isNotBlank()) {
-                        onStateChange(
-                            state.copy(
-                                instructions = state.instructions + state.instructionInput.trim(),
-                                instructionInput = ""
-                            )
-                        )
-                    }
-                },
-                onRemoveItem = { onStateChange(state.copy(instructions = state.instructions - it)) }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            SaveRecipeButton(enabled = isFormValid, onClick = onSave)
-        }
     }
 }
 

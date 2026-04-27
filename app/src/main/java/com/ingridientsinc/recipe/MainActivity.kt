@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ingridientsinc.recipe.navigation.NavGraph
@@ -42,6 +43,16 @@ fun RecipesApp(viewModel: RecipeViewModel = viewModel()) {
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
+    //<LK>: Prevents stacking duplicate destinations and preserves state across tab switches
+    fun navigatetoTab(route: String){
+        navController.navigate(route){
+            popUpTo(navController.graph.findStartDestination().id){
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             item(
@@ -53,8 +64,8 @@ fun RecipesApp(viewModel: RecipeViewModel = viewModel()) {
             item(
                 icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
                 label = { Text("Add") },
-                selected = currentRoute == Screen.Add.route,
-                onClick = { navController.navigate(Screen.Add.route) }
+                selected = currentRoute?.startsWith("create/") == true,
+                onClick = { navigatetoTab(Screen.CreateGraph.route) }
             )
         }
     ) {

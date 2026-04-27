@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 class RecipeViewModel : ViewModel() {
 
@@ -20,6 +23,20 @@ class RecipeViewModel : ViewModel() {
     val saveEvent: SharedFlow<Unit> = _saveEvent.asSharedFlow()
     private val recipeRepo = RecipeRepository()
 
+    //<LK>: What I added to this file
+    private val _favoriteIds =  MutableStateFlow<Set<Int>>(emptySet())
+    val favorites: StateFlow<List<Recipe>> = _favoriteIds
+        .combine(_recipes) { ids, all -> all.filter {it.id in ids}}
+        .stateIn(viewModelScope, SharingStarted.Eagerly,emptyList())
+
+    fun toggleFavorite(recipeId: Int){
+        _favoriteIds.value = _favoriteIds.value.let {current ->
+            if (recipeId in current) current - recipeId else current + recipeId
+        }
+    }
+
+    fun isFavorite(recipeId: Int): Boolean = recipeId in _favoriteIds.value
+    //<LK>: End of what I added to this file
     fun addRecipe(
         name: String,
         category: String,

@@ -4,19 +4,16 @@ import androidx.compose.ui.graphics.Color
 
 // Warm Terracotta family
 val Terracotta80 = Color(0xFFFFB599)
-val Terracotta60 = Color(0xFFE8825A)
 val Terracotta40 = Color(0xFFC1522A)
 val Terracotta20 = Color(0xFF7A2A0E)
 
 // Sage Green family
 val Sage80 = Color(0xFFB7CCAB)
-val Sage60 = Color(0xFF7FA671)
 val Sage40 = Color(0xFF4C7A3E)
 val Sage20 = Color(0xFF1F4A14)
 
 // Warm Amber family
 val Amber80 = Color(0xFFFFD699)
-val Amber60 = Color(0xFFF5B942)
 val Amber40 = Color(0xFFD4891A)
 val Amber20 = Color(0xFF7A4A00)
 

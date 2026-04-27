@@ -1,4 +1,4 @@
-package com.kuzmins2.recipe.navigation
+package com.ingridientsinc.recipe.navigation
 
 
 import androidx.compose.runtime.Composable
@@ -7,10 +7,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.kuzmins2.recipe.ui.AddRecipeScreen
-import com.kuzmins2.recipe.ui.RecipeDetailScreen
-import com.kuzmins2.recipe.ui.RecipeListScreen
-import com.kuzmins2.recipe.viewmodel.RecipeViewModel
+import com.ingridientsinc.recipe.ui.AddRecipeScreen
+import com.ingridientsinc.recipe.ui.RecipeDetailScreen
+import com.ingridientsinc.recipe.ui.RecipeListScreen
+import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
 
 
 @Composable

@@ -1,4 +1,4 @@
-package com.kuzmins2.recipe.ui
+package com.ingridientsinc.recipe.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kuzmins2.recipe.model.Recipe
-import com.kuzmins2.recipe.viewmodel.RecipeViewModel
+import com.ingridientsinc.recipe.model.Recipe
+import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
 
 
 @Composable

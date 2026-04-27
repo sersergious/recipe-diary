@@ -1,6 +1,7 @@
 package com.ingridientsinc.recipe.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ingridientsinc.recipe.RecipeApplication
@@ -22,12 +23,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-
 data class RecipeFull(
     val recipe: Recipe,
     val category: Category?,
@@ -89,27 +87,37 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     //<LK>: What I added to this file
-    private val _favoriteIds =  MutableStateFlow<Set<Int>>(emptySet())
-    val favorites: StateFlow<List<Recipe>> = _favoriteIds
-        .combine(_recipes) { ids, all -> all.filter {it.id in ids}}
-        .stateIn(viewModelScope, SharingStarted.Eagerly,emptyList())
+    // <SK> - rewired favorites to DB; replaced in-memory _favoriteIds + _recipes ref with repository.getFavoriteRecipes()
+    val favorites: StateFlow<List<Recipe>> =
+        repository.getFavoriteRecipes()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun toggleFavorite(recipeId: Int){
-        _favoriteIds.value = _favoriteIds.value.let {current ->
-            if (recipeId in current) current - recipeId else current + recipeId
+    fun toggleFavorite(recipe: Recipe) {
+        viewModelScope.launch {
+            repository.setFavorite(recipe.recipeId, !recipe.isFavorite)
         }
     }
 
-    fun isFavorite(recipeId: Int): Boolean = recipeId in _favoriteIds.value
+    fun isFavorite(recipe: Recipe): Boolean = recipe.isFavorite
     //<LK>: End of what I added to this file
+    //<SK> - changed ingredients to List<IngredientInput>
     fun addRecipe(
         name: String,
-        categoryId: Int,
+        categoryName: String,
         ingredients: List<IngredientInput>,
         instructions: List<String>
     ) {
         viewModelScope.launch {
             try {
+                // <SK> - replaced categoriesWithRecipes.value (stale when no subscribers) with a direct
+                //        suspending DB query so category lookup always reflects live Room data
+                val allCategories = repository.getAllCategories().first()
+                val categoryId = allCategories
+                    .firstOrNull { it.name == categoryName }
+                    ?.categoryId ?: run {
+                        _uiEvent.emit(UiEvent.Error("Category not found"))
+                        return@launch
+                    }
                 repository.insertFullRecipe(name, categoryId, ingredients, instructions)
                 _uiEvent.emit(UiEvent.RecipeSaved)
             } catch (e: Exception) {

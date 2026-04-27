@@ -40,7 +40,8 @@ fun FavoritesScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(favorites) { recipe ->
-            RecipeItem(recipe = recipe, onClick = { onRecipeClick(recipe.id) })
+            // <SK> - fixed recipe.id → recipe.recipeId to match the entity's actual property name
+            RecipeItem(recipe = recipe, onClick = { onRecipeClick(recipe.recipeId) })
         }
     }
 }

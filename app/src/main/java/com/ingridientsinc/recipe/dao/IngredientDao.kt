@@ -15,10 +15,4 @@ interface IngredientDao {
 
     @Insert
     suspend fun insertIngredient(ingredient: Ingredient)
-
-    @Update
-    suspend fun updateIngredient(ingredient: Ingredient)
-
-    @Delete
-    suspend fun deleteIngredient(ingredient: Ingredient)
 }

@@ -15,10 +15,4 @@ interface InstructionDao {
 
     @Insert
     suspend fun insertInstruction(instruction: Instruction)
-
-    @Update
-    suspend fun updateInstruction(instruction: Instruction)
-
-    @Delete
-    suspend fun deleteInstruction(instruction: Instruction)
 }

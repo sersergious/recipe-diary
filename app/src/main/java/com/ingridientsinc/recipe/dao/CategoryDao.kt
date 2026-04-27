@@ -20,6 +20,4 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE category_id = :id")
     fun getCategoryById(id: Int): Flow<Category?>
 
-    @Insert
-    suspend fun insertAll(vararg categories: Category)
 }

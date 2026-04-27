@@ -47,6 +47,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,28 +58,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
-
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ingridientsinc.recipe.repository.IngredientInput
+import com.ingridientsinc.recipe.viewmodel.CreateRecipeViewModel
 import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ingridientsinc.recipe.viewmodel.CreateRecipeViewModel
-
-// For managing the UI State of the AddRecipeScreen
-// and monitoring all the input, I need a data class.
-// This removes some of the redundancy and minimizes
-// the number of lines of code.
-data class AddRecipeState(
-    val recipeName: String = "",
-    val selectedCategory: String = "Breakfast",
-    val ingredientInput: String = "",
-    val instructionInput: String = "",
-    val ingredients: List<String> = emptyList(),
-    val instructions: List<String> = emptyList(),
-    val expanded: Boolean = false,
-    val submitted: Boolean = false,
-    val showDialog: Boolean = false
-)
+// <SK> - removed dead AddRecipeState duplicate;
+// canonical definition lives in CreateRecipeViewModel.kt
 
 //<LK>: The following replaces AddRecipeScreen and AddRecipeForm
 // so that these functions can be done by the 3 step composables
@@ -183,14 +171,17 @@ fun CreateIngredientsScreen(
             Text("Step 2 of 3: Ingredients",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary)
-            StringListInput(
-                label = "Ingredients",
-                input = state.ingredientInput,
+            // <SK> - replaced StringListInput with IngredientListInput to
+            // support quantity and imperial unit entry
+            IngredientListInput(
+                nameInput = state.ingredientName,
+                quantityInput = state.ingredientQuantity,
+                selectedUnit = state.ingredientUnit,
                 items = state.ingredients,
                 isError = state.submitted && state.ingredients.isEmpty(),
-                onInputChange = { v ->
-                    createVm.update { it.copy(ingredientInput = v) }
-                },
+                onNameChange = { v -> createVm.update { it.copy(ingredientName = v) } },
+                onQuantityChange = { v -> createVm.update { it.copy(ingredientQuantity = v) } },
+                onUnitChange = { v -> createVm.update { it.copy(ingredientUnit = v) } },
                 onAddItem = { createVm.addIngredient() },
                 onRemoveItem = { createVm.removeIngredient(it) }
             )
@@ -536,6 +527,175 @@ fun StringListItem(index: Int, text: String, onRemove: () -> Unit) {
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(16.dp)
             )
+        }
+    }
+}
+
+// <SK> - new composable for structured ingredient entry: name field + numeric qty field + imperial unit dropdown
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun IngredientListInput(
+    nameInput: String,
+    quantityInput: String,
+    selectedUnit: String,
+    items: List<IngredientInput>,
+    isError: Boolean = false,
+    onNameChange: (String) -> Unit,
+    onQuantityChange: (String) -> Unit,
+    onUnitChange: (String) -> Unit,
+    onAddItem: () -> Unit,
+    onRemoveItem: (IngredientInput) -> Unit
+) {
+    val imperialUnits = listOf("tsp", "tbsp", "cup", "fl oz", "pt", "qt", "gal", "oz", "lb", "pinch", "piece")
+    var unitExpanded by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.List,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(color = MaterialTheme.colorScheme.primaryContainer, shape = CircleShape)
+                    .padding(6.dp)
+            )
+            Text(
+                text = "Ingredients",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            OutlinedTextField(
+                value = quantityInput,
+                onValueChange = onQuantityChange,
+                label = { Text("Qty") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                ),
+                modifier = Modifier.width(80.dp)
+            )
+            ExposedDropdownMenuBox(
+                expanded = unitExpanded,
+                onExpandedChange = { unitExpanded = it },
+                modifier = Modifier.width(120.dp)
+            ) {
+                OutlinedTextField(
+                    value = selectedUnit,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Unit") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(unitExpanded) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    ),
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                )
+                ExposedDropdownMenu(
+                    expanded = unitExpanded,
+                    onDismissRequest = { unitExpanded = false }
+                ) {
+                    imperialUnits.forEach { unit ->
+                        DropdownMenuItem(
+                            text = { Text(unit) },
+                            onClick = {
+                                onUnitChange(unit)
+                                unitExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = nameInput,
+                onValueChange = onNameChange,
+                label = { Text("Ingredient name") },
+                isError = isError,
+                supportingText = {
+                    if (isError) Text("Add at least one ingredient", color = MaterialTheme.colorScheme.error)
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            FilledIconButton(
+                onClick = onAddItem,
+                shape = RoundedCornerShape(12.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add ingredient", tint = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+        items.forEachIndexed { index, item ->
+            IngredientListItem(index = index + 1, ingredient = item, onRemove = { onRemoveItem(item) })
+        }
+    }
+}
+
+// <SK> - new list item composable for structured IngredientInput; displays as "qty unit — name"
+@Composable
+fun IngredientListItem(index: Int, ingredient: IngredientInput, onRemove: () -> Unit) {
+    val qtyDisplay = if (ingredient.quantity == ingredient.quantity.toLong().toFloat())
+        ingredient.quantity.toLong().toString()
+    else "%.2f".format(ingredient.quantity).trimEnd('0').trimEnd('.')
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$index.",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "$qtyDisplay ${ingredient.unit} — ${ingredient.name}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+            Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
         }
     }
 }

@@ -19,5 +19,8 @@ data class Recipe(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "recipe_id") val recipeId: Int = 0,
     val name: String,
-    @ColumnInfo(name = "category_id") val categoryId: Int = 0
+    @ColumnInfo(name = "category_id") val categoryId: Int = 0,
+    // <SK> - added isFavorite column to support DB-backed favorites
+    // may need to change to integer since SQLite does not have native Boolean
+    @ColumnInfo(name = "is_favorite") val isFavorite: Boolean = false
 )

@@ -1,6 +1,7 @@
 package com.ingridientsinc.recipe.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.ingridientsinc.recipe.repository.IngredientInput
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -8,12 +9,15 @@ import kotlinx.coroutines.flow.asStateFlow
 //<LK>: UI state moved out of AddRecipeScreen so it can be shared
 //across the 3 nested-graph step screen via the scoped ViewModel
 
+// <SK> - split ingredientInput into three fields for structured entry; changed ingredients to List<IngredientInput>
 data class AddRecipeState(
     val recipeName: String = "",
     val selectedCategory: String = "Breakfast",
-    val ingredientInput: String = "",
+    val ingredientName: String = "",
+    val ingredientQuantity: String = "",
+    val ingredientUnit: String = "cup",
     val instructionInput: String = "",
-    val ingredients: List<String> = emptyList(),
+    val ingredients: List<IngredientInput> = emptyList(),
     val instructions: List<String> = emptyList(),
     val expanded: Boolean = false,
     val submitted: Boolean = false
@@ -29,17 +33,25 @@ class CreateRecipeViewModel: ViewModel() {
         _state.value = transform(_state.value)
     }
 
+    // <SK> - updated to parse qauntity + unit + name into an IngredientInput; clears all three input fields on add
     fun addIngredient() {
         val currentState = _state.value
-        if (currentState.ingredientInput.isNotBlank()) {
+        if (currentState.ingredientName.isNotBlank()) {
+            val qty = currentState.ingredientQuantity.toFloatOrNull() ?: 0f
             _state.value = currentState.copy(
-                ingredients = currentState.ingredients + currentState.ingredientInput.trim(),
-                ingredientInput = ""
+                ingredients = currentState.ingredients + IngredientInput(
+                    name = currentState.ingredientName.trim(),
+                    quantity = qty,
+                    unit = currentState.ingredientUnit
+                ),
+                ingredientName = "",
+                ingredientQuantity = ""
             )
         }
     }
 
-    fun removeIngredient(item: String) {
+    // <SK> - changed parameter type String → IngredientInput to match new ingredients list type
+    fun removeIngredient(item: IngredientInput) {
         _state.value = _state.value.let {
             currentState -> currentState.copy(ingredients = currentState.ingredients - item)
         }

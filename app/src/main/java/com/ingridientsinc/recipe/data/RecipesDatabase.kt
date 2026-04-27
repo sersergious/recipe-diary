@@ -14,6 +14,7 @@ import com.ingridientsinc.recipe.data.entities.Ingredient
 import com.ingridientsinc.recipe.data.entities.Instruction
 import com.ingridientsinc.recipe.data.entities.Recipe
 
+// <SK> - reset to version 1; user will clear app data manually to get a fresh DB with the updated schema
 @Database(entities = [Category::class, Ingredient::class, Instruction::class, Recipe::class], version = 1, exportSchema = false)
 abstract class RecipesDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
@@ -28,7 +29,6 @@ abstract class RecipesDatabase : RoomDatabase() {
         fun getDatabase(context: Context): RecipesDatabase {
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, RecipesDatabase::class.java, "recipe_database")
-                    .fallbackToDestructiveMigration(true)
                     .addCallback(seedCallback)
                     .build()
                     .also { Instance = it }

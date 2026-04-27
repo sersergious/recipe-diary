@@ -37,6 +37,14 @@ class RecipeRepository(
     fun getInstructionsByRecipe(id: Int): Flow<List<Instruction>> =
         instructionDao.getInstructionsByRecipe(id)
 
+    // <SK> - expose DB-backed favorites query
+    fun getFavoriteRecipes(): Flow<List<Recipe>> =
+        recipeDao.getFavoriteRecipes()
+
+    // <SK> - expose in-place favorite toggle
+    suspend fun setFavorite(recipeId: Int, isFavorite: Boolean) =
+        recipeDao.setFavorite(recipeId, isFavorite)
+
     suspend fun insertFullRecipe(
         name: String,
         categoryId: Int,

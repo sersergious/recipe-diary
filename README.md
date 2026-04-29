@@ -2,6 +2,88 @@
 
 **Changing the world one bowl at a time**
 
+## App Architecture
+
+```plantuml
+
+@startuml
+skinparam componentStyle uml2
+
+package "UI Layer" {
+    [MainActivity]
+    [NavGraph]
+    [RecipeListScreen]
+    [FavoritesScreen]
+    [RecipeDetailScreen]
+    [CreateDetailsScreen]
+    [CreateIngredientsScreen]
+    [CreateStepsScreen]
+}
+
+package "State Layer" {
+    component [RecipeViewModel] <<Activity Scoped>>
+    component [CreateRecipeViewModel] <<NavGraph Scoped>>
+}
+
+package "Data Layer" {
+    [RecipeRepository]
+    database "Room Database" {
+        [RecipeDao]
+        [CategoryDao]
+        [IngredientDao]
+        [InstructionDao]
+    }
+}
+
+[MainActivity] --> [NavGraph]
+[NavGraph] --> [RecipeListScreen]
+[NavGraph] --> [FavoritesScreen]
+[NavGraph] --> [RecipeDetailScreen]
+[NavGraph] --> [CreateDetailsScreen]
+[NavGraph] --> [CreateIngredientsScreen]
+[NavGraph] --> [CreateStepsScreen]
+
+[RecipeListScreen] ..> [RecipeViewModel]
+[FavoritesScreen] ..> [RecipeViewModel]
+[RecipeDetailScreen] ..> [RecipeViewModel]
+[CreateStepsScreen] ..> [RecipeViewModel]
+
+[CreateDetailsScreen] ..> [CreateRecipeViewModel]
+[CreateIngredientsScreen] ..> [CreateRecipeViewModel]
+[CreateStepsScreen] ..> [CreateRecipeViewModel]
+
+[RecipeViewModel] --> [RecipeRepository]
+
+[RecipeRepository] --> [RecipeDao]
+[RecipeRepository] --> [CategoryDao]
+[RecipeRepository] --> [IngredientDao]
+[RecipeRepository] --> [InstructionDao]
+
+@enduml
+
+```
+### Overview of the App Components
+
+| Component | Type | Function / Purpose |
+|-----------|------|-------------------|
+| MainActivity | Entry Point | Host for the NavigationSuiteScaffold and NavGraph. Manages the top-level app shell. |
+| NavGraph | Navigation | Defines all screen routes and nested graphs. Handles transitions between destinations. |
+| RecipeListScreen | UI Screen | Displays recipes grouped by category. Allows quick favorite toggling and navigation to details. |
+| FavoritesScreen | UI Screen | Displays a filtered list of recipes that the user has marked as favorites. |
+| RecipeDetailScreen | UI Screen | Shows full details of a specific recipe, including ingredients and instructions. |
+| CreateDetailsScreen | UI Screen | Step 1 of recipe creation: input name and select category. |
+| CreateIngredientsScreen | UI Screen | Step 2 of recipe creation: add/remove ingredients. |
+| CreateStepsScreen | UI Screen | Step 3 of recipe creation: add/remove instructions and save the recipe. |
+| RecipeViewModel | ViewModel | Activity Scoped. Manages global app state, such as the list of recipes, favo    rites, and loading specific recipe details. |
+| CreateRecipeViewModel | ViewModel | NavGraph Scoped (to CreateGraph). Maintains the temporary state of a new recipe being built across multiple screens. |
+| RecipeRepository | Repository | Central point for all data operations. |
+| RecipeDao | DAO | Handles CRUD operations for the recipe table, including favorite status. |
+| CategoryDao | DAO | Handles CRUD operations for the category table and fetches categories with their associated recipes. |
+| IngredientDao | DAO | Manages ingredients associated with specific recipes. |
+| InstructionDao | DAO | Manages recipe instructions/steps. |
+| RecipesDatabase | Room DB | The underlying SQLite database that persists all app data. |
+
+
 ## Database Schema
 
 We are using 4 tables in this schema: Categories, Recipes, Ingredients and Instructions. The entity relationships are as follow

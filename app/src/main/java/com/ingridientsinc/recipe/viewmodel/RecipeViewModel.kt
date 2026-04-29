@@ -48,7 +48,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         repository.getAllCategoriesWithRecipes()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Derived from SSOT — no extra stateIn; UI supplies initial value when collecting
+    // Derived from categoriesWithRecipes
     val categories: Flow<List<Category>> = categoriesWithRecipes
         .map { list -> list.map { it.category } }
 
@@ -87,7 +87,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     //<LK>: What I added to this file
-    // <SK> - rewired favorites to DB; replaced in-memory _favoriteIds + _recipes ref with repository.getFavoriteRecipes()
+    // <SK> - rewired favorites to DB; replaced in-memory _favoriteIds
+    // + _recipes ref with repository.getFavoriteRecipes()
     val favorites: StateFlow<List<Recipe>> =
         repository.getFavoriteRecipes()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

@@ -1,9 +1,14 @@
-# Database Schema
+# Ingredients.inc - Recipe App
+
+**Changing the world one bowl at a time**
+
+## Database Schema
 
 We are using 4 tables in this schema: Categories, Recipes, Ingredients and Instructions. The entity relatioships are as follow
-    - Category-recipe: one-to-many
-    - Recipe-ingredients: one-to-many
-    - Recipe-instuctions: one-to-many
+
+- Category-recipe: one-to-many    
+- Recipe-ingredients: one-to-many
+- Recipe-instuctions: one-to-many
 
 The following is the PlantUML code that provides the schema for the Database 
 

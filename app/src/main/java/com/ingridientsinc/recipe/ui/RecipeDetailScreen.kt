@@ -19,11 +19,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,7 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ingridientsinc.recipe.data.entities.Ingredient
 import com.ingridientsinc.recipe.viewmodel.RecipeFull
 import com.ingridientsinc.recipe.viewmodel.RecipeViewModel
-
+import com.ingridientsinc.recipe.data.entities.Recipe
 @Composable
 fun RecipeDetailScreen(
     recipeId: Int,
@@ -67,7 +70,10 @@ fun RecipeDetailScreen(
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                RecipeHeroBanner(name = it.recipe.name)
+                RecipeHeroBanner(
+                    recipe = it.recipe,
+                    onFavoriteToggle = { viewModel.toggleFavorite(it.recipe) }
+                )
                 RecipeDetailCard(recipeFull = it)
             }
         } ?: Text(
@@ -79,7 +85,10 @@ fun RecipeDetailScreen(
 }
 
 @Composable
-fun RecipeHeroBanner(name: String) {
+fun RecipeHeroBanner(
+    recipe: Recipe,
+    onFavoriteToggle: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,8 +110,20 @@ fun RecipeHeroBanner(name: String) {
             tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
             modifier = Modifier.size(100.dp)
         )
+        IconButton(
+            onClick = onFavoriteToggle,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = if (recipe.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = if (recipe.isFavorite) "Remove from favorites" else "Add to favorites",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+        }
         Text(
-            text = name,
+            text = recipe.name,
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onPrimary,
             fontWeight = FontWeight.Bold,

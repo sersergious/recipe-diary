@@ -8,7 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +52,8 @@ fun RecipeListScreen(
                 items(cwr.recipes.sortedBy { it.name }) { recipe ->
                     RecipeItem(
                         recipe = recipe,
-                        onClick = { onRecipeClick(recipe.recipeId) }
+                        onClick = { onRecipeClick(recipe.recipeId) },
+                        onFavoriteToggle = { viewModel.toggleFavorite(recipe) }
                     )
                 }
             }
@@ -55,19 +62,38 @@ fun RecipeListScreen(
 }
 
 @Composable
-fun RecipeItem(recipe: Recipe, onClick: () -> Unit) {
+fun RecipeItem(
+    recipe: Recipe,
+    onClick: () -> Unit,
+    onFavoriteToggle: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = recipe.name,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = recipe.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            IconButton(onClick = onFavoriteToggle) {
+                Icon(
+                    imageVector = if (recipe.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (recipe.isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (recipe.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

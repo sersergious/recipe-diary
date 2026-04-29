@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -66,6 +67,12 @@ fun RecipesApp(viewModel: RecipeViewModel = viewModel()) {
                 label = { Text("Add") },
                 selected = currentRoute?.startsWith("create/") == true,
                 onClick = { navigatetoTab(Screen.CreateGraph.route) }
+            )
+            item(
+                icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
+                label = { Text("Favorites") },
+                selected = currentRoute == Screen.Favorites.route,
+                onClick = { navigatetoTab(Screen.Favorites.route) }
             )
         }
     ) {

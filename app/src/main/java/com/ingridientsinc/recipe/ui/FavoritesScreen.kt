@@ -41,7 +41,11 @@ fun FavoritesScreen(
     ) {
         items(favorites) { recipe ->
             // <SK> - fixed recipe.id → recipe.recipeId to match the entity's actual property name
-            RecipeItem(recipe = recipe, onClick = { onRecipeClick(recipe.recipeId) })
+            RecipeItem(
+                recipe = recipe,
+                onClick = { onRecipeClick(recipe.recipeId) },
+                onFavoriteToggle = { viewModel.toggleFavorite(recipe) }
+            )
         }
     }
 }

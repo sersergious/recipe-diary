@@ -10,6 +10,8 @@ We are using 4 tables in this schema: Categories, Recipes, Ingredients and Instr
 - Recipe-ingredients: one-to-many
 - Recipe-instructions: one-to-many
 
+
+
 The following is the PlantUML code that provides the schema for the Database 
 
 ```plantuml

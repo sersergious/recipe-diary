@@ -4,63 +4,57 @@
 
 ## App Architecture
 
-```plantuml
+```mermaid
+graph TD
+    subgraph UI["UI Layer"]
+        MainActivity
+        NavGraph
+        RecipeListScreen
+        FavoritesScreen
+        RecipeDetailScreen
+        CreateDetailsScreen
+        CreateIngredientsScreen
+        CreateStepsScreen
+    end
 
-@startuml
-skinparam componentStyle uml2
+    subgraph State["State Layer"]
+        RecipeViewModel["RecipeViewModel<br/>«Activity Scoped»"]
+        CreateRecipeViewModel["CreateRecipeViewModel<br/>«NavGraph Scoped»"]
+    end
 
-package "UI Layer" {
-    [MainActivity]
-    [NavGraph]
-    [RecipeListScreen]
-    [FavoritesScreen]
-    [RecipeDetailScreen]
-    [CreateDetailsScreen]
-    [CreateIngredientsScreen]
-    [CreateStepsScreen]
-}
+    subgraph Data["Data Layer"]
+        RecipeRepository
+        subgraph Room["Room Database"]
+            RecipeDao
+            CategoryDao
+            IngredientDao
+            InstructionDao
+        end
+    end
 
-package "State Layer" {
-    component [RecipeViewModel] <<Activity Scoped>>
-    component [CreateRecipeViewModel] <<NavGraph Scoped>>
-}
+    MainActivity --> NavGraph
+    NavGraph --> RecipeListScreen
+    NavGraph --> FavoritesScreen
+    NavGraph --> RecipeDetailScreen
+    NavGraph --> CreateDetailsScreen
+    NavGraph --> CreateIngredientsScreen
+    NavGraph --> CreateStepsScreen
 
-package "Data Layer" {
-    [RecipeRepository]
-    database "Room Database" {
-        [RecipeDao]
-        [CategoryDao]
-        [IngredientDao]
-        [InstructionDao]
-    }
-}
+    RecipeListScreen -.-> RecipeViewModel
+    FavoritesScreen -.-> RecipeViewModel
+    RecipeDetailScreen -.-> RecipeViewModel
+    CreateStepsScreen -.-> RecipeViewModel
 
-[MainActivity] --> [NavGraph]
-[NavGraph] --> [RecipeListScreen]
-[NavGraph] --> [FavoritesScreen]
-[NavGraph] --> [RecipeDetailScreen]
-[NavGraph] --> [CreateDetailsScreen]
-[NavGraph] --> [CreateIngredientsScreen]
-[NavGraph] --> [CreateStepsScreen]
+    CreateDetailsScreen -.-> CreateRecipeViewModel
+    CreateIngredientsScreen -.-> CreateRecipeViewModel
+    CreateStepsScreen -.-> CreateRecipeViewModel
 
-[RecipeListScreen] ..> [RecipeViewModel]
-[FavoritesScreen] ..> [RecipeViewModel]
-[RecipeDetailScreen] ..> [RecipeViewModel]
-[CreateStepsScreen] ..> [RecipeViewModel]
+    RecipeViewModel --> RecipeRepository
 
-[CreateDetailsScreen] ..> [CreateRecipeViewModel]
-[CreateIngredientsScreen] ..> [CreateRecipeViewModel]
-[CreateStepsScreen] ..> [CreateRecipeViewModel]
-
-[RecipeViewModel] --> [RecipeRepository]
-
-[RecipeRepository] --> [RecipeDao]
-[RecipeRepository] --> [CategoryDao]
-[RecipeRepository] --> [IngredientDao]
-[RecipeRepository] --> [InstructionDao]
-
-@enduml
-
+    RecipeRepository --> RecipeDao
+    RecipeRepository --> CategoryDao
+    RecipeRepository --> IngredientDao
+    RecipeRepository --> InstructionDao
 ```
 ### Overview of the App Components
 
@@ -74,7 +68,7 @@ package "Data Layer" {
 | CreateDetailsScreen | UI Screen | Step 1 of recipe creation: input name and select category. |
 | CreateIngredientsScreen | UI Screen | Step 2 of recipe creation: add/remove ingredients. |
 | CreateStepsScreen | UI Screen | Step 3 of recipe creation: add/remove instructions and save the recipe. |
-| RecipeViewModel | ViewModel | Activity Scoped. Manages global app state, such as the list of recipes, favo    rites, and loading specific recipe details. |
+| RecipeViewModel | ViewModel | Activity Scoped. Manages global app state, such as the list of recipes, favorites, and loading specific recipe details. |
 | CreateRecipeViewModel | ViewModel | NavGraph Scoped (to CreateGraph). Maintains the temporary state of a new recipe being built across multiple screens. |
 | RecipeRepository | Repository | Central point for all data operations. |
 | RecipeDao | DAO | Handles CRUD operations for the recipe table, including favorite status. |
@@ -94,89 +88,69 @@ We are using 4 tables in this schema: Categories, Recipes, Ingredients and Instr
 
 
 
-The following is the PlantUML code that provides the schema for the Database 
+The following is the Mermaid ER diagram for the Database
 
-```plantuml
-@startuml Recipe Management Data Model
+```mermaid
+erDiagram
+    categories ||--o{ recipe : "classifies"
+    recipe ||--o{ ingredients : "contains"
+    recipe ||--o{ instructions : "has"
 
-skinparam linetype ortho
-skinparam roundcorner 8
-skinparam entity {
-  BackgroundColor white
-  BorderColor #555
-  FontSize 13
-}
-entity "categories" as categories #LightBlue {
-  * id : INT <<PK>>
-  --
-  name : STRING
-}
-entity "recipes" as recipes #FFD580 {
-  * id : INT <<PK>>
-  --
-  name : STRING
-  category_id : INT <<FK>>
-  isFavorite : INT
-}
-entity "ingredients" as ingredients #90EE90 {
-  * id : INT <<PK>>
-  --
-  recipe_id : INT <<FK>>
-  name : STRING
-  quantity : FLOAT
-  unit : STRING
-}
-entity "instructions" as instructions #D8B4FE {
-  * id : INT <<PK>>
-  --
-  recipe_id : INT <<FK>>
-  step_number : INT
-  description : STRING
-}
-categories ||--o{ recipes : "classifies"
-recipes ||--o{ ingredients : "contains"
-recipes ||--o{ instructions : "has"
-@enduml
+    categories {
+        INT category_id PK
+        STRING name
+    }
+    recipe {
+        INT recipe_id PK
+        STRING name
+        INT category_id FK
+        BOOLEAN is_favorite
+    }
+    ingredients {
+        INT ingredient_id PK
+        INT recipe_id FK
+        STRING name
+        FLOAT quantity
+        STRING unit
+    }
+    instructions {
+        INT instruction_id PK
+        INT recipe_id FK
+        INT step_number
+        STRING description
+    }
 ```
 
 ## Navigation Graph
 
 The graph has four top-level destinations (Browse, Favorite, and the Create flow) plus a nested navigation graph that organizes the 3-step recipe creation flow. Ingredients and instructions are added by the user on separate screen within the nested graph, and a graph-scoped 'CreateRecipeViewModel' accumulates the in-progress recipe across all 3 screens.
 
-The following plantUML graph shows a visual version of the graph
-```plantuml
-@startuml Recipe Navigation Graph
-skinparam shadowing false
-skinparam state {
-  BackgroundColor #FAFAFA
-  BorderColor #555
-  FontSize 13
-}
+The following Mermaid graph shows a visual version of the graph
+```mermaid
+stateDiagram-v2
+    [*] --> Browse
 
-[*] --> Browse
+    Browse : Browse — Recipe list (start destination)
+    Favorites : Favorites — Favorites list
+    Detail : Detail — Recipe detail (recipeId argument)
 
-state Browse : Recipe list (start destination)
-state Favorites : Favorites list
-state Detail : Recipe detail\n(recipeId argument)
+    state CreateGraph {
+        [*] --> CreateDetails
+        CreateDetails : Step 1 — name + category
+        CreateIngredients : Step 2 — ingredients
+        CreateSteps : Step 3 — instructions
+        CreateDetails --> CreateIngredients : Next
+        CreateIngredients --> CreateSteps : Next
+        CreateSteps --> [*] : Save
+    }
 
-state CreateGraph {
-  [*] --> CreateDetails
-  state CreateDetails : Step 1 — name + category
-  state CreateIngredients : Step 2 — ingredients
-  state CreateSteps : Step 3 — instructions
-  CreateDetails --> CreateIngredients : Next
-  CreateIngredients --> CreateSteps : Next
-  CreateSteps --> [*] : Save
-}
-
-Browse --> Detail : tap recipe
-Browse --> CreateGraph : tap Add tab
-Browse --> Favorites : tap Favorites tab
-Favorites --> Detail : tap recipe
-Favorites --> Browse : tap Browse tab
-Detail --> Browse : back / up
-CreateGraph --> Browse : Save (pops nested graph)
-@enduml
+    Browse --> Detail : tap recipe
+    Browse --> CreateGraph : tap Add tab
+    Browse --> Favorites : tap Favorites tab
+    Favorites --> Detail : tap recipe
+    Favorites --> Browse : tap Browse tab
+    Detail --> Browse : back / up
+    CreateGraph --> Browse : Save (pops nested graph)
 ```
 ### Screens and their functions
 

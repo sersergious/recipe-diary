@@ -10,10 +10,13 @@ import com.ingridientsinc.recipe.data.entities.Ingredient
 import com.ingridientsinc.recipe.data.entities.Instruction
 import com.ingridientsinc.recipe.data.entities.Recipe
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 data class IngredientInput(val name: String, val quantity: Float, val unit: String)
 
-class RecipeRepository(
+@Singleton
+class RecipeRepository @Inject constructor(
     private val recipeDao: RecipeDao,
     private val ingredientDao: IngredientDao,
     private val instructionDao: InstructionDao,

@@ -2,7 +2,7 @@ package com.ingridientsinc.recipe.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -67,8 +67,7 @@ fun NavGraph(
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry(Screen.CreateGraph.route)
                 }
-                val createVm: CreateRecipeViewModel =
-                    viewModel(viewModelStoreOwner = parentEntry)
+                val createVm: CreateRecipeViewModel = hiltViewModel(viewModelStoreOwner = parentEntry)
                 CreateDetailsScreen(
                     createVm = createVm,
                     onNext = { navController.navigate(Screen.CreateIngredients.route) }
@@ -79,8 +78,7 @@ fun NavGraph(
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry(Screen.CreateGraph.route)
                 }
-                val createVm: CreateRecipeViewModel =
-                    viewModel(viewModelStoreOwner = parentEntry)
+                val createVm: CreateRecipeViewModel = hiltViewModel(viewModelStoreOwner = parentEntry)
                 CreateIngredientsScreen(
                     createVm = createVm,
                     onNext = { navController.navigate(Screen.CreateSteps.route) }
@@ -92,8 +90,7 @@ fun NavGraph(
                     navController.getBackStackEntry(Screen.CreateGraph.route)
                 }
                 // <LK>: Step 3 takes BOTH viewmodels - graph-scoped for state
-                val createVm: CreateRecipeViewModel =
-                    viewModel(viewModelStoreOwner = parentEntry)
+                val createVm: CreateRecipeViewModel = hiltViewModel(viewModelStoreOwner = parentEntry)
                 CreateStepsScreen(
                     createVm = createVm,
                     recipeVm = viewModel,

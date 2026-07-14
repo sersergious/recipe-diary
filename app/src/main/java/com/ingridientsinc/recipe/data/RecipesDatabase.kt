@@ -1,8 +1,6 @@
 package com.ingridientsinc.recipe.data
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ingridientsinc.recipe.dao.CategoryDao
@@ -23,19 +21,9 @@ abstract class RecipesDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
 
     companion object {
-        @Volatile
-        private var Instance: RecipesDatabase? = null
+        const val DATABASE_NAME = "recipe_database"
 
-        fun getDatabase(context: Context): RecipesDatabase {
-            return Instance ?: synchronized(this) {
-                Room.databaseBuilder(context, RecipesDatabase::class.java, "recipe_database")
-                    .addCallback(seedCallback)
-                    .build()
-                    .also { Instance = it }
-            }
-        }
-
-        private val seedCallback = object : RoomDatabase.Callback() {
+        val seedCallback = object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
                 db.execSQL("INSERT INTO categories (category_id, name) VALUES (1, 'Breakfast')")

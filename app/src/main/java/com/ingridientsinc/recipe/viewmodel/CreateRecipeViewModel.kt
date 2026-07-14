@@ -2,9 +2,11 @@ package com.ingridientsinc.recipe.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.ingridientsinc.recipe.repository.IngredientInput
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
 //<LK>: UI state moved out of AddRecipeScreen so it can be shared
 //across the 3 nested-graph step screen via the scoped ViewModel
@@ -25,7 +27,8 @@ data class AddRecipeState(
 
 //<LK>: Graph-scoped via viewModel in NavGraph.kt. One instance per
 // CreateGraph entry. This is cleared on exit
-class CreateRecipeViewModel: ViewModel() {
+@HiltViewModel
+class CreateRecipeViewModel @Inject constructor(): ViewModel() {
     private val _state = MutableStateFlow(AddRecipeState())
     val state: StateFlow<AddRecipeState> = _state.asStateFlow()
 

@@ -1,16 +1,16 @@
 package com.ingridientsinc.recipe.viewmodel
 
-import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ingridientsinc.recipe.RecipeApplication
 import com.ingridientsinc.recipe.data.CategoryWithRecipe
 import com.ingridientsinc.recipe.data.entities.Category
 import com.ingridientsinc.recipe.data.entities.Ingredient
 import com.ingridientsinc.recipe.data.entities.Instruction
 import com.ingridientsinc.recipe.data.entities.Recipe
 import com.ingridientsinc.recipe.repository.IngredientInput
+import com.ingridientsinc.recipe.repository.RecipeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 data class RecipeFull(
     val recipe: Recipe,
     val category: Category?,
@@ -39,9 +40,10 @@ sealed class UiEvent {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class RecipeViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = (application as RecipeApplication).recipeRepository
+@HiltViewModel
+class RecipeViewModel @Inject constructor(
+    private val repository: RecipeRepository
+) : ViewModel() {
 
     // Single source of truth for list screen
     val categoriesWithRecipes: StateFlow<List<CategoryWithRecipe>> =
